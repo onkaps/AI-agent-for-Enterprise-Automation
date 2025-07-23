@@ -1,0 +1,49 @@
+@server=http://localhost:4004
+ #@server=da9ece23trial-dev-api-testing-srv.cfapps.ap21.hana.ondemand.com
+
+@username=samaarole.ext@deloitte.com
+@password=Saturn25!
+
+### metadata
+# @name metadata
+GET {{server}}/odata/v4/SCIMService/$metadata
+
+### assignUsersToGroup
+# @name assignUsersToGroup_POST
+POST {{server}}/odata/v4/SCIMService/assignUsersToGroup
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
+{
+  "groupId": "groupId-4225",
+  "userIds": [
+    "String-4225"
+  ]
+}
+
+
+### testDestination
+# @name testDestination_POST
+POST {{server}}/odata/v4/SCIMService/testDestination
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
+{}
+
+
+### getAllUsers
+# @name getAllUsers_POST
+POST {{server}}/odata/v4/SCIMService/getAllUsers
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
+{}
+
+
+### Action1
+# @name Action1_POST
+POST {{server}}/odata/v4/SCIMService/Action1
+Content-Type: application/json
+Authorization: Basic {{username}}:{{password}}
+
+{}

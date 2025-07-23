@@ -1,0 +1,45 @@
+{
+  "name": "api_testing",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "repository": "<Add your repository here>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@sap-cloud-sdk/connectivity": "^4.0.2",
+    "@sap-cloud-sdk/core": "^1.54.2",
+    "@sap-cloud-sdk/http-client": "^4.0.2",
+    "@sap/cds": "^9.1.0",
+    "@sap/xsenv": "^5.6.1",
+    "@sap/xssec": "^4",
+    "base-64": "^1.0.0",
+    "express": "^4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@cap-js/cds-types": "^0.13.0",
+    "@cap-js/sqlite": "^2",
+    "@sap/cds-dk": ">=8"
+  },
+  "scripts": {
+    "start": "cds-serve"
+  },
+  "cds": {
+    "requires": {
+      "[production]": {
+        "auth": "xsuaa"
+      },
+      "connectivity": true,
+      "destinations": true,
+      "ias": {
+        "kind": "rest",
+        "credentials": {
+          "destination": "ias_api",
+          "forwardAuthToken": true
+        }
+      }
+    }
+  }
+}
