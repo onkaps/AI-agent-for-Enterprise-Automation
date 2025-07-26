@@ -173,7 +173,79 @@ async function getGroupId(groupName, destinationName) {
   }
 }
 
+async function assignGroupsToUser(email, groupNames) {
+  const destinationName = 'ias_api';
+
+  try {
+    const userId = await getUserUuidByEmail(email, destinationName);
+
+    if (!userId) {
+      throw new Error(`User not found for email: ${email}`);
+    }
+
+    const destination = await core.getDestination(destinationName);
+    if (!destination?.url) {
+      throw new Error(`Destination "${destinationName}" does not contain a URL.`);
+    }
+
+    const ops = [];
+
+    for (const groupName of groupNames) {
+      const groupId = await getGroupId(groupName, destinationName);
+
+      if (!groupId) {
+        console.warn(`[assignGroupsToUser] ⚠️ Skipping group "${groupName}" (not found).`);
+        continue;
+      }
+
+      ops.push({
+        method: "PATCH",
+        path: `/Groups/${groupId}`,
+        bulkId: `group-${groupId}`,
+        data: {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+          operations: [{
+            op: "Add",
+            path: "members",
+            value: [{ value: userId }]
+          }]
+        }
+      });
+    }
+
+    if (ops.length === 0) {
+      console.warn(`[assignGroupsToUser] ⚠️ No valid groups to assign.`);
+      return { status: 'warning', message: 'No valid groups found to assign' };
+    }
+
+    const response = await executeHttpRequest(destination, {
+      method: 'POST',
+      url: `/scim/Bulk`,
+      headers: {
+        'Accept': 'application/scim+json',
+        'Content-Type': 'application/scim+json'
+      },
+      data: {
+        failOnErrors: 1,
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:BulkRequest"],
+        operations: ops
+      }
+    });
+
+    console.log(`[assignGroupsToUser] ✅ Assigned ${ops.length} group(s) to ${email}`);
+    return { status: 'success', email, assignedGroups: groupNames };
+
+  } catch (err) {
+    console.error(`[assignGroupsToUser] ❌ Failed: ${err.message}`);
+    if (err.response) {
+      console.error(`[assignGroupsToUser] ❌ Response Status: ${err.response.status}`);
+      console.error(`[assignGroupsToUser] ❌ Response Data:`, JSON.stringify(err.response.data, null, 2));
+    }
+    throw err;
+  }
+}
 
 
-module.exports = { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId };
+
+module.exports = { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId, assignGroupsToUser };
 

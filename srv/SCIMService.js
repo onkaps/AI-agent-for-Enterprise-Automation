@@ -1,5 +1,4 @@
-const { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId } = require('./BulkAssignment');
-const { getDestination } = require('@sap-cloud-sdk/connectivity');
+const { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId, assignGroupsToUser } = require('./BulkAssignment');
 const cds = require('@sap/cds');
 // const xsenv = require('@sap/xsenv');
 // xsenv.loadEnv();
@@ -101,6 +100,26 @@ module.exports = cds.service.impl(async function () {
       req.error(500, `Failed to get group ID: ${err.message}`);
     }
   });
+  
+  this.on('assignGroupsToUser', async req => {
+    const { email, groupsNames } = req.data;
+  
+    if (!email || !Array.isArray(groupsNames) || groupsNames.length === 0) {
+      req.error(400, 'Both "email" and non-empty "groupsNames" array are required.');
+      return;
+    }
+  
+    try {
+      console.log(`[assignGroupsToUser] Email: ${email}`);
+      console.log(`[assignGroupsToUser] Groups: ${groupsNames.join(', ')}`);
+      const result = await assignGroupsToUser(email, groupsNames);
+      return result;
+    } catch (err) {
+      console.error(`[assignGroupsToUser] ❌ Error:`, err.message);
+      req.error(500, `Failed to assign groups: ${err.message}`);
+    }
+  });
+  
   
 
 });
