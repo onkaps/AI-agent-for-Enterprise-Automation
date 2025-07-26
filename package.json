@@ -36,7 +36,7 @@
       "ias": {
         "kind": "rest",
         "credentials": {
-          "destination": "ias_api",
+          "destination": "Northwind",
           "forwardAuthToken": true
         }
       }

@@ -1,6 +1,10 @@
-const { getDestination } = require('@sap-cloud-sdk/connectivity');
+// const { getDestination } = require('@sap-cloud-sdk/core');
 const { executeHttpRequest } = require('@sap-cloud-sdk/http-client');
-const base64 = require('base-64');
+const core = require('@sap-cloud-sdk/core');
+const { type } = require('@sap/cds');
+ 
+
+
 
 class BulkAssignment {
   constructor(destinationName) {
@@ -34,11 +38,11 @@ class BulkAssignment {
   async assignUsersToGroup(groupId, userIds) {
     console.log(`[BulkAssignment]  Starting assignment for groupId: ${groupId} with users: ${userIds.join(', ')}`);
 
-    const destination = await getDestination(this.destinationName);
-    if (!destination?.url) {
-      console.error(`[BulkAssignment]  Destination "${this.destinationName}" not found or missing URL`);
-      throw new Error(`Destination "${this.destinationName}" not found or missing URL`);
-    }
+    const destination = await core.getDestination(this.destinationName);
+    // if (!destination?.url) {
+    //   console.error(`[BulkAssignment]  Destination "${this.destinationName}" not found or missing URL`);
+    //   throw new Error(`Destination "${this.destinationName}" not found or missing URL`);
+    // }
 
     console.log(`[BulkAssignment]  Destination resolved: ${destination.url}`);
 
@@ -70,27 +74,22 @@ class BulkAssignment {
 }
 
 async function getAllUsersFromSCIM(destinationName) {
-  const destination = await getDestination(destinationName);
-  // const destination = await cds.connect.to("ias");
-  console.log(JSON.stringify(process.env.VCAP_SERVICES, null, 2));
-
-  console.log(destination);
-  if (!destination?.url) {
-    throw new Error(`Destination "${destinationName}" not found or missing URL`);
-  }
-
+  const destination = await core.getDestination('ias_api');
 
   const response = await executeHttpRequest(destination, {
     method: 'GET',
     url: '/scim/Users?count=100',
     headers: {
-      Accept: '*/*',
-      'DataServiceVersion': '2.0'
+      'Accept': '*/*',
+      'DataServiceVersion': '2.0',
+      'Content-Type': 'application/scim+json'
     }
   });
 
   return response.data;
 }
+
+
 
 
 

@@ -1,12 +1,11 @@
 @server=http://localhost:4004
- #@server=da9ece23trial-dev-api-testing-srv.cfapps.ap21.hana.ondemand.com
-
 @username=samaarole.ext@deloitte.com
 @password=Saturn25!
 
-### metadata
-# @name metadata
-GET {{server}}/odata/v4/SCIMService/$metadata
+#email id to scim
+#group id -hard code
+#assign group to user - bulk
+
 
 ### assignUsersToGroup
 # @name assignUsersToGroup_POST
@@ -15,9 +14,9 @@ Content-Type: application/json
 Authorization: Basic {{username}}:{{password}}
 
 {
-  "groupId": "groupId-4225",
+  "groupId": "98829775-0a4e-4768-80fa-191e5dbf6bf5",
   "userIds": [
-    "String-4225"
+    "ea4dae53-a70c-4e89-9385-3552b7734711"
   ]
 }
 
@@ -35,7 +34,7 @@ Authorization: Basic {{username}}:{{password}}
 # @name getAllUsers_POST
 POST {{server}}/odata/v4/SCIMService/getAllUsers
 Content-Type: application/json
-Authorization: Basic {{username}}:{{password}}
+#Authorization: Basic {{username}}:{{password}}
 
 {}
 
