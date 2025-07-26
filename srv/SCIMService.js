@@ -1,8 +1,8 @@
-const { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail } = require('./BulkAssignment');
+const { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId } = require('./BulkAssignment');
 const { getDestination } = require('@sap-cloud-sdk/connectivity');
 const cds = require('@sap/cds');
-const xsenv = require('@sap/xsenv');
-xsenv.loadEnv();
+// const xsenv = require('@sap/xsenv');
+// xsenv.loadEnv();
 
 
 module.exports = cds.service.impl(async function () {
@@ -77,5 +77,30 @@ module.exports = cds.service.impl(async function () {
       req.error(500, `Failed to get UUID: ${err.message}`);
     }
   });
+
+  this.on('getGroupId', async req => {
+    const { groupName } = req.data;
+  
+    if (!groupName) {
+      req.error(400, 'Group name is required');
+      return;
+    }
+  
+    try {
+      console.log(`[Service] Fetching ID for group: ${groupName}`);
+      const groupId = await getGroupId(groupName, 'ias_api');
+  
+      if (!groupId) {
+        req.error(404, `No group found with name: ${groupName}`);
+        return;
+      }
+  
+      return { status: 'success', groupName, groupId };
+    } catch (err) {
+      console.error(`[Service] Failed to get group ID: ${err.message}`);
+      req.error(500, `Failed to get group ID: ${err.message}`);
+    }
+  });
+  
 
 });

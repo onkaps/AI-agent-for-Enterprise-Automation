@@ -7,7 +7,7 @@
 # @name assignUsersToGroup_POST
 POST {{server}}/odata/v4/SCIMService/assignUsersToGroup
 Content-Type: application/json
-# Authorization: Basic {{username}}:{{password}}
+#Authorization: Basic {{username}}:{{password}}
 
 {
   "groupId": "98829775-0a4e-4768-80fa-191e5dbf6bf5",
@@ -17,11 +17,36 @@ Content-Type: application/json
 }
 
 
+### assignGroupsToUser
+# @name assignGroupsToUser_POST
+POST {{server}}/odata/v4/SCIMService/assignGroupsToUser
+Content-Type: application/json
+#Authorization: Basic {{username}}:{{password}}
+
+{
+  "email": "john.smith@example.com",
+  "groupsNames": [
+    "Administrators"
+  ]
+}
+
+
+### getGroupId
+# @name getGroupId_POST
+POST {{server}}/odata/v4/SCIMService/getGroupId
+Content-Type: application/json
+#Authorization: Basic {{username}}:{{password}}
+
+{
+  "groupName": "Administrators"
+}
+
+
 ### getAllUsers
 # @name getAllUsers_POST
 POST {{server}}/odata/v4/SCIMService/getAllUsers
 Content-Type: application/json
-# Authorization: Basic {{username}}:{{password}}
+#Authorization: Basic {{username}}:{{password}}
 
 {}
 
@@ -30,7 +55,7 @@ Content-Type: application/json
 # @name getUserUuidByEmail_POST
 POST {{server}}/odata/v4/SCIMService/getUserUuidByEmail
 Content-Type: application/json
-# Authorization: Basic {{username}}:{{password}}
+#Authorization: Basic {{username}}:{{password}}
 
 {
   "email": "john.smith@example.com"

@@ -2,8 +2,6 @@ const { executeHttpRequest } = require('@sap-cloud-sdk/http-client');
 const core = require('@sap-cloud-sdk/core');
 const { type } = require('@sap/cds');
  
-
-
 class BulkAssignment {
   constructor(destinationName) {
     this.destinationName = destinationName;
@@ -97,7 +95,6 @@ async function getUserUuidByEmail(email, destinationName) {
       throw new Error(`Destination "${destinationName}" does not contain a URL.`);
     }
 
-    // Encode email properly for use in query string
     const encodedEmail = encodeURIComponent(`emails.value eq "${email}"`);
     const url = `/scim/Users?filter=${encodedEmail}&count=100&attributes=id`;
 
@@ -133,8 +130,50 @@ async function getUserUuidByEmail(email, destinationName) {
   }
 }
 
+async function getGroupId(groupName, destinationName) {
+  try {
+    const destination = await core.getDestination(destinationName);
+
+    if (!destination?.url) {
+      throw new Error(`Destination "${destinationName}" does not contain a URL.`);
+    }
+
+    const encodedGroupName = encodeURIComponent(`displayName eq "${groupName}"`);
+    const url = `/scim/Groups?filter=${encodedGroupName}&count=100&attributes=id`;
+
+    const response = await executeHttpRequest(destination, {
+      method: 'GET',
+      url,
+      headers: {
+        'Accept': 'application/scim+json',
+        'DataServiceVersion': '2.0',
+        'Content-Type': 'application/scim+json'
+      }
+    });
+
+    const groups = response.data.Resources;
+
+    if (groups && groups.length > 0) {
+      const group = groups[0];
+      const groupId = group.id;
+      console.log(`[getGroupId] ✅ Found ID for group "${groupName}": ${groupId}`);
+      return groupId;
+    } else {
+      console.warn(`[getGroupId] ⚠️ No group found with name: ${groupName}`);
+      return null;
+    }
+
+  } catch (error) {
+    console.error(`[getGroupId] ❌ Error:`, error.message);
+    if (error.response) {
+      console.error(`[getGroupId] ❌ Response Status: ${error.response.status}`);
+      console.error(`[getGroupId] ❌ Response Data:`, JSON.stringify(error.response.data, null, 2));
+    }
+    throw error;
+  }
+}
 
 
 
-module.exports = { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail };
+module.exports = { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId };
 
