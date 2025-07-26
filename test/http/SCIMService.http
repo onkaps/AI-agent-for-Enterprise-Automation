@@ -1,48 +1,37 @@
 @server=http://localhost:4004
-@username=samaarole.ext@deloitte.com
-@password=Saturn25!
-
-#email id to scim
-#group id -hard code
-#assign group to user - bulk
+@username=alice
+@password=
 
 
 ### assignUsersToGroup
 # @name assignUsersToGroup_POST
 POST {{server}}/odata/v4/SCIMService/assignUsersToGroup
 Content-Type: application/json
-Authorization: Basic {{username}}:{{password}}
+# Authorization: Basic {{username}}:{{password}}
 
 {
   "groupId": "98829775-0a4e-4768-80fa-191e5dbf6bf5",
-  "userIds": [
-    "ea4dae53-a70c-4e89-9385-3552b7734711"
+  "emails": [
+    "john.smith@example.com"
   ]
 }
-
-
-### testDestination
-# @name testDestination_POST
-POST {{server}}/odata/v4/SCIMService/testDestination
-Content-Type: application/json
-Authorization: Basic {{username}}:{{password}}
-
-{}
 
 
 ### getAllUsers
 # @name getAllUsers_POST
 POST {{server}}/odata/v4/SCIMService/getAllUsers
 Content-Type: application/json
-#Authorization: Basic {{username}}:{{password}}
+# Authorization: Basic {{username}}:{{password}}
 
 {}
 
 
-### Action1
-# @name Action1_POST
-POST {{server}}/odata/v4/SCIMService/Action1
+### getUserUuidByEmail
+# @name getUserUuidByEmail_POST
+POST {{server}}/odata/v4/SCIMService/getUserUuidByEmail
 Content-Type: application/json
-Authorization: Basic {{username}}:{{password}}
+# Authorization: Basic {{username}}:{{password}}
 
-{}
+{
+  "email": "john.smith@example.com"
+}

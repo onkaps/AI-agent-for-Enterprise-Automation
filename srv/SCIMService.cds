@@ -1,12 +1,14 @@
 @cds.odata.v4
 @path: 'SCIMService'
 service SCIMService {
-    action assignUsersToGroup(groupId : String,
-                              userIds : many String) returns String;
 
-    action testDestination()                         returns String;
+    action assignUsersToGroup(groupId : String, emails : many String)      returns String;
 
-    action getAllUsers()                             returns String;
+    action assignGroupsToUser(email : String, groupsNames : many String) returns String;
 
-    action Action1()                                 returns String;
+    action getGroupId(groupName : String)                returns String;
+
+    action getAllUsers()                                 returns String;
+
+    action getUserUuidByEmail(email : String)            returns String;
 }

@@ -1,9 +1,7 @@
-// const { getDestination } = require('@sap-cloud-sdk/core');
 const { executeHttpRequest } = require('@sap-cloud-sdk/http-client');
 const core = require('@sap-cloud-sdk/core');
 const { type } = require('@sap/cds');
  
-
 
 
 class BulkAssignment {
@@ -51,8 +49,10 @@ class BulkAssignment {
     try {
       const response = await executeHttpRequest(destination, {
         method: 'POST',
-        url: '/Bulk',
+        url: '/scim/Bulk',
         headers: {
+          'Content-Type': 'application/scim+json',
+          'DataServiceVersion': '2.0',
           'Content-Type': 'application/scim+json'
         },
         data: payload
@@ -89,8 +89,52 @@ async function getAllUsersFromSCIM(destinationName) {
   return response.data;
 }
 
+async function getUserUuidByEmail(email, destinationName) {
+  try {
+    const destination = await core.getDestination(destinationName);
+
+    if (!destination?.url) {
+      throw new Error(`Destination "${destinationName}" does not contain a URL.`);
+    }
+
+    // Encode email properly for use in query string
+    const encodedEmail = encodeURIComponent(`emails.value eq "${email}"`);
+    const url = `/scim/Users?filter=${encodedEmail}&count=100&attributes=id`;
+
+    const response = await executeHttpRequest(destination, {
+      method: 'GET',
+      url,
+      headers: {
+        'Accept': 'application/scim+json',
+        'DataServiceVersion': '2.0',
+        'Content-Type': 'application/scim+json'
+      }
+    });
+
+    const users = response.data.Resources;
+
+    if (users && users.length > 0) {
+      const user = users[0];
+      const uuid = user['urn:ietf:params:scim:schemas:extension:sap:2.0:User']?.userUuid || user.id;
+      console.log(`[getUserUuidByEmail] ✅ Found UUID for ${email}: ${uuid}`);
+      return uuid;
+    } else {
+      console.warn(`[getUserUuidByEmail] ⚠️ No user found with email: ${email}`);
+      return null;
+    }
+
+  } catch (error) {
+    console.error(`[getUserUuidByEmail] ❌ Error:`, error.message);
+    if (error.response) {
+      console.error(`[getUserUuidByEmail] ❌ Response Status: ${error.response.status}`);
+      console.error(`[getUserUuidByEmail] ❌ Response Data:`, JSON.stringify(error.response.data, null, 2));
+    }
+    throw error;
+  }
+}
 
 
 
 
-module.exports = { BulkAssignment, getAllUsersFromSCIM };
+module.exports = { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail };
+
