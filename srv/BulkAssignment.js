@@ -251,7 +251,217 @@ async function revokeGroupsFromUser(email, groupNames) {
   }
 }
 
+class UserCreation {
+  constructor(destinationName) {
+    this.destinationName = destinationName;
+  }
 
+  createUserPayload(userAttributes) {
+    const baseSchemas = ["urn:ietf:params:scim:schemas:core:2.0:User"];
+    const payload = {
+      schemas: [...baseSchemas]
+    };
+
+    //Handle userName (* field)
+    if (userAttributes.userName) {
+      payload.userName = userAttributes.userName;
+    } else if (userAttributes.email) {
+      payload.userName = userAttributes.email;
+    } else {
+      throw new Error("Either userName or email must be provided in userAttributes.");
+    }
+
+    //Handle optional fields
+    if (userAttributes.password) {
+      payload.password = userAttributes.password;
+    }
+    if (userAttributes.displayName) {
+      payload.displayName = userAttributes.displayName;
+    }
+    if (userAttributes.nickName) {
+      payload.nickName = userAttributes.nickName;
+    }
+    if (userAttributes.profileUrl) {
+      payload.profileUrl = userAttributes.profileUrl;
+    }
+    if (userAttributes.title) {
+      payload.title = userAttributes.title;
+    }
+    if (userAttributes.userType) {
+      payload.userType = userAttributes.userType;
+    }
+    if (userAttributes.preferredLanguage) {
+      payload.preferredLanguage = userAttributes.preferredLanguage;
+    }
+    if (userAttributes.locale) {
+      payload.locale = userAttributes.locale;
+    }
+    if (userAttributes.timeZone) {
+      payload.timeZone = userAttributes.timeZone;
+    }
+
+    //Handle active status
+    payload.active = userAttributes.active !== undefined ? userAttributes.active : true;
+
+    //Handle name object
+    if (userAttributes.name) {
+      payload.name = {};
+      if (userName.name.familyName) payload.name.familyName = userAttributes.name.familyName;
+      if (userAttributes.name.givenName) payload.name.givenName = userAttributes.name.givenName;
+      if (userAttributes.name.middleName) payload.name.middleName = userAttributes.name.middleName;
+      if (userAttributes.name.honorificPrefix) payload.name.honorificPrefix = userAttributes.name.honorificPrefix;
+      if (userAttributes.name.honorificSuffix) payload.name.honorificSuffix = userAttributes.name.honorificSuffix;
+      if (userAttributes.name.formatted) payload.name.formatted = userAttributes.name.formatted;
+    }
+
+    //Handle emails array
+    if (userAttributes.emails && Array.isArray(userAttributes.emails)) {
+      payload.emails = userAttributes.emails.map(email => {
+        if (typeof email === 'string') {
+          return { value: email, primary: true };
+        }
+        return email;
+      });
+    } else if (userAttributes.email) {
+      payload.emails = [{ value: userAttributes.email, primary: true }];
+    }
+
+    //Handle phone numbers 
+    if (userAttributes.phoneNumber || userAttributes.phoneNumbers) {
+      payload.phoneNumbers = [];
+      if (userAttributes.phoneNumbers && Array.isArray(userAttributes.phoneNumbers)) {
+        payload.phoneNumbers = userAttributes.phoneNumbers.map(phone => {
+          if (typeof phone === 'string') {
+            return { value: phone, type: 'work' };
+          }
+          return phone;
+        })
+      } else if (userAttributes.phoneNumber) {
+        payload.phoneNumbers = [{ value: userAttributes.phoneNumber, type: 'work' }];
+      }
+    }
+
+    //Handle addresses
+    if (userAttributes.addresses) {
+      payload.addresses = userAttributes.addresses;
+    }
+
+    //Handle enterprise extension 
+    if (userAttributes.enterprise) {
+      payload.schemas.push("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
+      payload['urn:ietf:params:scim:schemas:extension:enterprise:2.0:User'] = userAttributes.enterprise;
+    }
+    // Handle SAP extension
+    if (userAttributes.sapExtension) {
+      payload.schemas.push("urn:ietf:params:scim:schemas:extension:sap:2.0:User");
+      payload["urn:ietf:params:scim:schemas:extension:sap:2.0:User"] = userAttributes.sapExtension;
+    }
+
+    // Handle custom attributes dynamically
+    if (userAttributes.customSchemas) {
+      Object.keys(userAttributes.customSchemas).forEach(schema => {
+        if (!payload.schemas.includes(schema)) {
+          payload.schemas.push(schema);
+        }
+        payload[schema] = userAttributes.customSchemas[schema];
+      });
+    }
+
+    console.log(`[UserCreation] Generated payload:`, JSON.stringify(payload, null, 2));
+    return payload;
+  }
+  async createUser(userAttributes) {
+    console.log(`[UserCreation] Creating user with attributes:`, JSON.stringify(userAttributes, null, 2));
+    const destination = await core.getDestination(this.destinationName);
+
+    if (!destination?.url) {
+      throw new Error(`Destination "${this.destinationName}" does not contain a URL.`);
+    }
+    const payload = this.createUserPayload(userAttributes);
+
+    try {
+      const response = await executeHttpRequest(destination, {
+        method: 'POST',
+        url: '/scim/Users',
+        headers: {
+          'Accept': 'application/scim+json',
+          'Content-Type': 'application/scim+json',
+          'DataServiceVersion': '2.0'
+        },
+        data: payload
+      });
+      console.log(`[UserCreation] User created successfully: ${response.data}`);
+      console.log(`[UserCreation] Created user:`, JSON.stringify(response.data, null, 2));
+      return response.data;
+    } catch (error) {
+      console.error(`[UserCreation] Error creating user:`, error.message);
+      if (error.response) {
+        console.error(`[UserCreation] Response Status: ${error.response.status}`);
+        console.error(`[UserCreation] Response Data:`, JSON.stringify(error.response.data, null, 2));
+      }
+      throw error;
+    }
+  }
+  async createUser(userArray) {
+    console.log(`[UserCreation] Creating ${userArray.length} users in bulk`);
+
+    const results = [];
+    const errors = [];
+
+    for (let i = 0; i < userArray.length; i++) {
+      const userAttributes = userArray[i];
+      try {
+        console.log(`[UserCreation] Processing user ${i + 1}/${userArray.length}`);
+        const result = await this.createUser(userAttributes);
+        results.push({
+          index: i,
+          status: 'success',
+          user: result,
+          originalAttributes: userAttributes
+        });
+      } catch (error) {
+        console.error(`[UserCreation] Error creating user ${i + 1}:`, error.message);
+        errors.push({
+          index: i,
+          status: 'error',
+          error: error.message,
+          originalAttributes: userAttributes
+        });
+      }
+    }
+
+    console.log(`[UserCreation] Bulk creation completed: ${results.length} successes, ${errors.length} errors`);
+
+    return {
+      successful: results,
+      failed: errors,
+      summary: {
+        total: userArray.length,
+        successes: results.length,
+        errors: errors.length
+      }
+    };
+  }
+
+  async createSimpleUser(email, firestName, lastName, password = null) {
+    const userAttributes = {
+      userName: email,
+      email: email,
+      name: {
+        givenName: firestName,
+        familyName: lastName,
+        formatted: `${firestName} ${lastName}`
+      },
+      displayName: `${firestName} ${lastName}`,
+      emails: [{ value: email, primary: true }],
+      active: true
+    };
+    if (password) {
+      userAttributes.password = password;
+    }
+    return await this.createUser(userAttributes);
+  } 
+}
 
 module.exports = { revokeGroupsFromUser, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId, assignGroupsToUser };
 
