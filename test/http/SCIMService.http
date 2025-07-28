@@ -10,7 +10,7 @@ Content-Type: application/json
 # Authorization: Basic {{username}}:{{password}}
 
 {
-  "groupId": "Administrators",
+  "groupId": "ExampleGroup",
   "emails": [
     "john.smith@example.com"
   ]
@@ -26,8 +26,8 @@ Content-Type: application/json
 {
   "email": "john.smith@example.com",
   "groupsNames": [
-    "Administrators",
-    "Developers"
+    "ExampleGroup",
+    "Group2"
   ]
 }
 
@@ -39,7 +39,7 @@ Content-Type: application/json
 # Authorization: Basic {{username}}:{{password}}
 
 {
-  "groupName": "Administrators"
+  "groupName": "Group2"
 }
 
 
@@ -60,4 +60,19 @@ Content-Type: application/json
 
 {
   "email": "john.smith@example.com"
+}
+
+
+### revokeGroupsFromUser
+# @name revokeGroupsFromUser_POST
+POST {{server}}/odata/v4/SCIMService/revokeGroupsFromUser
+Content-Type: application/json
+# Authorization: Basic {{username}}:{{password}}
+
+{
+  "email": "john.smith@example.com",
+  "groupsNames": [
+    "ExampleGroup",
+    "Group2"
+  ]
 }

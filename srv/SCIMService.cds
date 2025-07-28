@@ -4,7 +4,9 @@ service SCIMService {
 
     action assignUsersToGroup(groupId : String, emails : many String)      returns String;
 
-    action assignGroupsToUser(email : String, groupsNames : many String) returns String;
+    action assignGroupsToUser(email : String, groupsNames : many String)   returns String;
+
+    action revokeGroupsFromUser(email : String, groupsNames : many String)   returns String;
 
     action getGroupId(groupName : String)                returns String;
 

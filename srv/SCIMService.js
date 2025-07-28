@@ -1,4 +1,4 @@
-const { BulkAssignment, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId, assignGroupsToUser } = require('./BulkAssignment');
+const { revokeGroupsFromUser, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId, assignGroupsToUser } = require('./BulkAssignment');
 const cds = require('@sap/cds');
 // const xsenv = require('@sap/xsenv');
 // xsenv.loadEnv();
@@ -119,7 +119,24 @@ module.exports = cds.service.impl(async function () {
       req.error(500, `Failed to assign groups: ${err.message}`);
     }
   });
-  
-  
+
+  this.on('revokeGroupsFromUser', async (req) => {
+    const { email, groupsNames } = req.data;
+
+    console.log(`[revokeGroupsFromUser] Email: ${email}`);
+    console.log(`[revokeGroupsFromUser] Groups: ${groupsNames}`);
+
+    if (!email || !Array.isArray(groupsNames) || groupsNames.length === 0) {
+      return req.reject(400, 'Both "email" and non-empty "groupsNames" array are required.');
+    }
+
+    try {
+      const result = await revokeGroupsFromUser(email, groupsNames);
+      return result;
+    } catch (err) {
+      console.error(`[revokeGroupsFromUser] ❌ Handler Error: ${err.message}`);
+      return req.reject(500, `Failed to revoke groups: ${err.message}`);
+    }
+  });
 
 });
