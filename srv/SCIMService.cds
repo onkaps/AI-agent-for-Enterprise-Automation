@@ -2,7 +2,7 @@
 @path: 'SCIMService'
 service SCIMService {
 
-    action assignUsersToGroup(groupId : String, emails : many String)      returns String;
+    // action assignUsersToGroup(groupId : String, emails : many String)      returns String;
 
     action assignGroupsToUser(email : String, groupsNames : many String)   returns String;
 
@@ -13,4 +13,16 @@ service SCIMService {
     action getAllUsers()                                 returns String;
 
     action getUserUuidByEmail(email : String)            returns String;
+
+    action createUser(userAttributes : String)          returns String;
+
+    action createUsers(usersArray : String)             returns String;
+
+    action createSimpleUser(
+        email : String,
+        firstName : String,
+        lastName : String,
+        password : String
+    ) returns String;
+
 }

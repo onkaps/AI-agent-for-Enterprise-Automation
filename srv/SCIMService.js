@@ -5,43 +5,7 @@ const cds = require('@sap/cds');
 
 
 module.exports = cds.service.impl(async function () {
-  this.on('assignUsersToGroup', async req => {
-    const { groupId, emails } = req.data;
-    console.log(`[Service]  Received request to assign users to groupId: ${groupId}`);
-    console.log(`[Service]  Email list: ${JSON.stringify(emails)}`);
   
-    const assigner = new BulkAssignment('ias_api');
-  
-    try {
-      // Convert emails to UUIDs
-      const uuidPromises = emails.map(email => getUserUuidByEmail(email, 'ias_api'));
-      const uuids = await Promise.all(uuidPromises);
-  
-      const validUuids = uuids.filter(uuid => !!uuid);
-      if (validUuids.length === 0) {
-        req.error(404, 'No valid users found for the provided emails.');
-        return;
-      }
-  
-      console.log(`[Service] UUIDs to assign: ${validUuids.join(', ')}`);
-  
-      const result = await assigner.assignUsersToGroup(groupId, validUuids);
-      console.log(`[Service] Assignment successful for groupId ${groupId}`);
-  
-      return {
-        status: 'success',
-        message: 'Users assigned successfully',
-        assignedUuids: validUuids,
-        result
-      };
-    } catch (err) {
-      console.error(`[Service] Failed to assign users to group: ${err.message}`);
-      req.error(500, `Failed to assign users: ${err.message}`);
-    }
-  });
-  
-
-
   this.on('getAllUsers', async req => {
     try {
       console.log(`[Service] Fetching all users from SCIM`);
@@ -136,6 +100,112 @@ module.exports = cds.service.impl(async function () {
     } catch (err) {
       console.error(`[revokeGroupsFromUser] ❌ Handler Error: ${err.message}`);
       return req.reject(500, `Failed to revoke groups: ${err.message}`);
+    }
+  });
+
+
+  
+  // CREATE USERS ACTIONS
+
+  this.on('createUser', async req => {
+    const { userAttributes } = req.data;
+
+    if (!userAttributes) {
+      req.error(400, 'userAttributes is required');
+      return;
+    }
+
+    try {
+      // Parse the JSON string if it's a string
+      let parsedAttributes;
+      if (typeof userAttributes === 'string') {
+        parsedAttributes = JSON.parse(userAttributes);
+      } else {
+        parsedAttributes = userAttributes;
+      }
+
+      console.log(`[Service] Creating user with attributes:`, JSON.stringify(parsedAttributes, null, 2));
+
+      const userCreator = new UserCreation('ias_api');
+      const result = await userCreator.createUser(parsedAttributes);
+
+      return {
+        status: 'success',
+        message: 'User created successfully',
+        user: result
+      };
+    } catch (err) {
+      console.error(`[Service] Failed to create user: ${err.message}`);
+      req.error(500, `Failed to create user: ${err.message}`);
+    }
+  });
+
+  /**
+   * Creates multiple users in bulk
+   */
+  this.on('createUsers', async req => {
+    const { usersArray } = req.data;
+
+    if (!usersArray) {
+      req.error(400, 'usersArray is required');
+      return;
+    }
+
+    try {
+      // Parse the JSON string if it's a string
+      let parsedUsersArray;
+      if (typeof usersArray === 'string') {
+        parsedUsersArray = JSON.parse(usersArray);
+      } else {
+        parsedUsersArray = usersArray;
+      }
+
+      if (!Array.isArray(parsedUsersArray) || parsedUsersArray.length === 0) {
+        req.error(400, 'usersArray must be a non-empty array');
+        return;
+      }
+
+      console.log(`[Service] Creating ${parsedUsersArray.length} users in bulk`);
+
+      const userCreator = new UserCreation('ias_api');
+      const results = await userCreator.createUsers(parsedUsersArray);
+
+      return {
+        status: results.failed.length === 0 ? 'success' : 'partial_success',
+        message: `Bulk user creation completed: ${results.summary.successful} successful, ${results.summary.failed} failed`,
+        results: results
+      };
+    } catch (err) {
+      console.error(`[Service] Failed to create users in bulk: ${err.message}`);
+      req.error(500, `Failed to create users in bulk: ${err.message}`);
+    }
+  });
+
+  /**
+   * Creates a simple user with minimal required fields for testing
+   */
+  this.on('createSimpleUser', async req => {
+    const { email, firstName, lastName, password } = req.data;
+
+    if (!email || !firstName || !lastName) {
+      req.error(400, 'email, firstName, and lastName are required');
+      return;
+    }
+
+    try {
+      console.log(`[Service] Creating simple user: ${firstName} ${lastName} (${email})`);
+
+      const userCreator = new UserCreation('ias_api');
+      const result = await userCreator.createSimpleUser(email, firstName, lastName, password);
+
+      return {
+        status: 'success',
+        message: 'Simple user created successfully',
+        user: result
+      };
+    } catch (err) {
+      console.error(`[Service] Failed to create simple user: ${err.message}`);
+      req.error(500, `Failed to create simple user: ${err.message}`);
     }
   });
 
