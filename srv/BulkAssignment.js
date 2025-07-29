@@ -405,6 +405,13 @@ class UserCreation {
     }
   }
   async createUser(userArray) {
+    if (!Array.isArray(userArray)) {
+      return await this.createUser(userArray);
+    }
+    if (!Array.isArray(userArray)) {
+      // go to single user creation
+      return await this.createUser(userArray);
+    }
     console.log(`[UserCreation] Creating ${userArray.length} users in bulk`);
 
     const results = [];
