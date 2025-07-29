@@ -306,7 +306,7 @@ class UserCreation {
     //Handle name object
     if (userAttributes.name) {
       payload.name = {};
-      if (userName.name.familyName) payload.name.familyName = userAttributes.name.familyName;
+      if (userAttributes.name.familyName) payload.name.familyName = userAttributes.name.familyName;
       if (userAttributes.name.givenName) payload.name.givenName = userAttributes.name.givenName;
       if (userAttributes.name.middleName) payload.name.middleName = userAttributes.name.middleName;
       if (userAttributes.name.honorificPrefix) payload.name.honorificPrefix = userAttributes.name.honorificPrefix;
@@ -368,6 +368,7 @@ class UserCreation {
     }
 
     console.log(`[UserCreation] Generated payload:`, JSON.stringify(payload, null, 2));
+    console.log(payload);
     return payload;
   }
   async createUser(userAttributes) {
@@ -403,6 +404,9 @@ class UserCreation {
     }
   }
   async createUser(userArray) {
+    if (!Array.isArray(userArray)) {
+      return await this.createUser(userArray);
+    }
     console.log(`[UserCreation] Creating ${userArray.length} users in bulk`);
 
     const results = [];
@@ -463,5 +467,5 @@ class UserCreation {
   } 
 }
 
-module.exports = { revokeGroupsFromUser, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId, assignGroupsToUser };
+module.exports = { revokeGroupsFromUser, getAllUsersFromSCIM, getUserUuidByEmail, getGroupId, assignGroupsToUser, UserCreation };
 

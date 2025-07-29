@@ -76,3 +76,26 @@ Content-Type: application/json
     "Group2"
   ]
 }
+
+### createSimpleUser - Minimal required fields for testing
+# @name createSimpleUser_POST
+POST {{server}}/odata/v4/SCIMService/createSimpleUser
+Content-Type: application/json
+# Authorization: Basic {{username}}:{{password}}
+
+{
+  "email": "jane.doe@example.com",
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "password": "TempPassword123!"
+}
+
+
+### handleChatbotInput
+# @name handleChatbotInput_POST
+POST {{server}}/odata/v4/ChatbotService/handleChatbotInput
+Content-Type: application/json
+
+{
+  "input": "Add jane.doe@example.com to Group2"
+}
