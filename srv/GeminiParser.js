@@ -6,7 +6,7 @@ require('dotenv').config();
 async function handleGeminiExtraction(inputText) {
   const API_KEY = process.env.GEMINI_API_KEY;
 
-  console.log(API_KEY);
+  // console.log(API_KEY);
   const prompt = `
   Extract the following from this input: 
   - intent (assign or revoke),

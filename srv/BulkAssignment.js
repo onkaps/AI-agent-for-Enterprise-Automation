@@ -212,11 +212,11 @@ async function revokeGroupsFromUser(email, groupNames) {
           schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
           operations: [{
             op: "remove",
-            path: "members",
-            value: [{ value: userId }]
+            path: `members[value eq "${userId}"]`
           }]
         }
       });
+            
     }
 
     if (ops.length === 0) {
